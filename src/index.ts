@@ -9,8 +9,8 @@ export * from './types';
 // Components will be exported here once implemented
 // export { StoryTree, StoryNode } from './components';
 
-// Utilities will be exported here once implemented
-// export { buildFlowStructure, applyLayout } from './utils';
+// Tree traversal utilities
+export { traverseTree, concatenatePath } from './utils';
 
 // Analysis functions will be exported here once implemented
 // export { analyzeStory, traversePaths } from './analysis';
