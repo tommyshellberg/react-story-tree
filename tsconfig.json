@@ -1,0 +1,46 @@
+{
+  "compilerOptions": {
+    /* Language and Environment */
+    "target": "ES2020",                          // Compile to ES2020 (modern JS, supported by Node 14+)
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],   // Include type definitions for modern JS + browser APIs
+    "jsx": "react-jsx",                          // Modern JSX transform (no need to import React)
+
+    /* Modules */
+    "module": "ESNext",                          // Use modern ES modules
+    "moduleResolution": "bundler",               // Module resolution for bundlers like tsup
+    "resolveJsonModule": true,                   // Allow importing .json files
+
+    /* Emit */
+    "declaration": true,                         // Generate .d.ts files (type definitions)
+    "declarationMap": true,                      // Generate source maps for .d.ts files (for IDEs)
+    "sourceMap": true,                           // Generate source maps for debugging
+    "outDir": "./dist",                          // Output directory for compiled files
+    "noEmit": true,                              // Don't emit files (tsup handles this)
+
+    /* Interop Constraints */
+    "esModuleInterop": true,                     // Better compatibility with CommonJS modules
+    "allowSyntheticDefaultImports": true,        // Allow default imports from modules with no default export
+    "forceConsistentCasingInFileNames": true,    // Ensure correct file name casing
+    "isolatedModules": true,                     // Ensure each file can be transpiled independently
+
+    /* Type Checking */
+    "strict": true,                              // Enable all strict type checking options
+    "noUnusedLocals": true,                      // Error on unused local variables
+    "noUnusedParameters": true,                  // Error on unused function parameters
+    "noFallthroughCasesInSwitch": true,         // Error on fallthrough cases in switch statements
+    "noUncheckedIndexedAccess": true,           // Add undefined to indexed access types
+
+    /* Completeness */
+    "skipLibCheck": true                         // Skip type checking of declaration files (faster builds)
+  },
+  "include": [
+    "src/**/*"                                   // Include all files in src directory
+  ],
+  "exclude": [
+    "node_modules",                              // Don't compile dependencies
+    "dist",                                      // Don't compile build output
+    "tests",                                     // Tests have separate config
+    "**/*.test.ts",
+    "**/*.test.tsx"
+  ]
+}
