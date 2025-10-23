@@ -6,8 +6,10 @@
 // Export all types
 export * from './types';
 
-// Components will be exported here once implemented
-// export { StoryTree, StoryNode } from './components';
+// Export React components
+export { StoryNode } from './components';
+// StoryTree will be added once implemented
+// export { StoryTree } from './components';
 
 // Utility functions
 export { traverseTree, concatenatePath, buildFlowStructure, applyLayout } from './utils';

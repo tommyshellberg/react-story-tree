@@ -48,6 +48,9 @@ export interface FlowNodeData extends Record<string, unknown> {
 
   /** Custom CSS class for styling */
   className?: string;
+
+  /** Optional click handler for this specific node */
+  onClick?: (nodeId: string) => void;
 }
 
 /**
