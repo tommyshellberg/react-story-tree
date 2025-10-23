@@ -7,8 +7,6 @@
  * @module components
  */
 
-// Export custom node component
 export { StoryNode } from './StoryNode';
-
-// StoryTree component will be added here once implemented
-// export { StoryTree } from './StoryTree';
+export { StoryTree } from './StoryTree';
+export type { StoryTreeProps } from './StoryTree';

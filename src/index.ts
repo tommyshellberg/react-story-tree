@@ -7,9 +7,8 @@
 export * from './types';
 
 // Export React components
-export { StoryNode } from './components';
-// StoryTree will be added once implemented
-// export { StoryTree } from './components';
+export { StoryNode, StoryTree } from './components';
+export type { StoryTreeProps } from './components';
 
 // Utility functions
 export { traverseTree, concatenatePath, buildFlowStructure, applyLayout } from './utils';

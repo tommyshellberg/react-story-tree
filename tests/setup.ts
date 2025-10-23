@@ -5,6 +5,13 @@ import React from 'react';
 // This file runs before each test file
 // It sets up testing-library/jest-dom matchers like toBeInTheDocument()
 
+// Mock ResizeObserver for React Flow
+global.ResizeObserver = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+}));
+
 // Mock React Flow components
 // React Flow components like Handle require a provider context
 // For unit testing, we mock them to avoid setup complexity
