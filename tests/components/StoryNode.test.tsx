@@ -389,4 +389,174 @@ describe('StoryNode Component', () => {
       expect(() => render(<StoryNode {...props} />)).not.toThrow();
     });
   });
+
+  describe('Theme Customization', () => {
+    it('should apply custom leaf colors from theme', () => {
+      const props = createMockNodeProps({
+        data: {
+          storyNode: {
+            id: 'leaf-node',
+            title: 'Leaf Node',
+            content: 'End of path',
+          },
+          isLeaf: true,
+          theme: {
+            leafBorderColor: '#ff0000',
+            leafBackgroundColor: '#ffcccc',
+          },
+        },
+      });
+
+      const { container } = render(<StoryNode {...props} />);
+
+      const nodeElement = container.querySelector('[data-leaf="true"]');
+      expect(nodeElement).toBeInTheDocument();
+      expect(nodeElement).toHaveStyle({ borderColor: '#ff0000' });
+      expect(nodeElement).toHaveStyle({ background: '#ffcccc' });
+    });
+
+    it('should apply custom branch colors from theme', () => {
+      const props = createMockNodeProps({
+        data: {
+          storyNode: {
+            id: 'branch-node',
+            title: 'Branch Node',
+            content: 'Has children',
+          },
+          isLeaf: false,
+          theme: {
+            branchBorderColor: '#0000ff',
+            branchBackgroundColor: '#ccccff',
+          },
+        },
+      });
+
+      const { container } = render(<StoryNode {...props} />);
+
+      const nodeElement = container.querySelector('[data-leaf="false"]');
+      expect(nodeElement).toBeInTheDocument();
+      expect(nodeElement).toHaveStyle({ borderColor: '#0000ff' });
+      expect(nodeElement).toHaveStyle({ background: '#ccccff' });
+    });
+
+    it('should use default colors when theme is not provided', () => {
+      const props = createMockNodeProps({
+        data: {
+          storyNode: {
+            id: 'node-1',
+            title: 'Default Node',
+            content: 'No theme',
+          },
+          isLeaf: true,
+        },
+      });
+
+      const { container } = render(<StoryNode {...props} />);
+
+      const nodeElement = container.querySelector('[data-leaf="true"]');
+      expect(nodeElement).toBeInTheDocument();
+      // Should use default green for leaf nodes
+      expect(nodeElement).toHaveStyle({ borderColor: '#4caf50' });
+    });
+  });
+
+  describe('Node ID Display', () => {
+    it('should show customId when showNodeId is true', () => {
+      const props = createMockNodeProps({
+        data: {
+          storyNode: {
+            id: 'node-1',
+            customId: 'quest-1a',
+            title: 'Quest Node',
+            content: 'Story content',
+          },
+          isLeaf: false,
+          showNodeId: true,
+        },
+      });
+
+      render(<StoryNode {...props} />);
+
+      expect(screen.getByText('quest-1a')).toBeInTheDocument();
+    });
+
+    it('should not show customId when showNodeId is false', () => {
+      const props = createMockNodeProps({
+        data: {
+          storyNode: {
+            id: 'node-1',
+            customId: 'quest-1a',
+            title: 'Quest Node',
+            content: 'Story content',
+          },
+          isLeaf: false,
+          showNodeId: false,
+        },
+      });
+
+      render(<StoryNode {...props} />);
+
+      expect(screen.queryByText('quest-1a')).not.toBeInTheDocument();
+    });
+
+    it('should not show customId when it is undefined', () => {
+      const props = createMockNodeProps({
+        data: {
+          storyNode: {
+            id: 'node-1',
+            title: 'Quest Node',
+            content: 'Story content',
+          },
+          isLeaf: false,
+          showNodeId: true,
+        },
+      });
+
+      render(<StoryNode {...props} />);
+
+      // Should render without errors even when customId is missing
+      expect(screen.getByText('Quest Node')).toBeInTheDocument();
+    });
+  });
+
+  describe('Scrollable Content', () => {
+    it('should apply nowheel class to content area', () => {
+      const props = createMockNodeProps({
+        data: {
+          storyNode: {
+            id: 'node-1',
+            title: 'Node',
+            content: 'Scrollable content here',
+          },
+          isLeaf: false,
+        },
+      });
+
+      const { container } = render(<StoryNode {...props} />);
+
+      const contentElement = container.querySelector('.nowheel');
+      expect(contentElement).toBeInTheDocument();
+      expect(contentElement).toHaveTextContent('Scrollable content here');
+    });
+
+    it('should have proper overflow styling for long content', () => {
+      const longContent = 'A'.repeat(500);
+      const props = createMockNodeProps({
+        data: {
+          storyNode: {
+            id: 'node-1',
+            title: 'Node',
+            content: longContent,
+          },
+          isLeaf: false,
+        },
+      });
+
+      const { container } = render(<StoryNode {...props} />);
+
+      const contentElement = container.querySelector('.nowheel');
+      expect(contentElement).toHaveStyle({ overflowY: 'auto' });
+      expect(contentElement).toHaveStyle({ maxHeight: '100px' });
+    });
+  });
 });

@@ -4,26 +4,29 @@
  * @module components/StoryTree
  */
 
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useEffect } from 'react';
 import {
   ReactFlow,
   Background,
   Controls,
   MiniMap,
   ReactFlowProvider,
+  useNodesState,
+  useEdgesState,
   type Node,
   type Edge,
-  type NodeChange,
-  type EdgeChange,
-  type OnNodesChange,
-  type OnEdgesChange,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
 import { StoryNode } from './StoryNode';
 import { buildFlowStructure } from '../utils/flow-builder';
 import { applyLayout } from '../utils/layout';
-import type { StoryNode as StoryNodeType, TreeStructure, LayoutOptions } from '../types';
+import type {
+  StoryNode as StoryNodeType,
+  TreeStructure,
+  LayoutOptions,
+  VisualizationTheme
+} from '../types';
 
 /**
  * Props for the StoryTree component
@@ -40,6 +43,12 @@ export interface StoryTreeProps {
 
   /** Optional layout configuration (direction, spacing) */
   layoutOptions?: LayoutOptions;
+
+  /** Theme/styling options */
+  theme?: VisualizationTheme;
+
+  /** Whether to show node IDs (customId). Default: false */
+  showNodeId?: boolean;
 
   /** Called when a node is clicked */
   onNodeClick?: (nodeId: string) => void;
@@ -75,6 +84,8 @@ const StoryTreeInner: React.FC<StoryTreeProps> = ({
   structure,
   rootId,
   layoutOptions,
+  theme,
+  showNodeId = false,
   onNodeClick,
   onEdgeClick,
   showBackground = true,
@@ -107,7 +118,7 @@ const StoryTreeInner: React.FC<StoryTreeProps> = ({
   const flowEdges = flowStructure.edges;
 
   // Convert to React Flow format
-  const reactFlowNodes: Node[] = useMemo(() => {
+  const initialNodes: Node[] = useMemo(() => {
     return flowNodes.map((node) => ({
       id: node.id,
       type: 'storyNode',
@@ -115,11 +126,13 @@ const StoryTreeInner: React.FC<StoryTreeProps> = ({
       data: {
         ...node.data,
         onClick: onNodeClick,
+        theme,
+        showNodeId,
       },
     }));
-  }, [flowNodes, onNodeClick]);
+  }, [flowNodes, onNodeClick, theme, showNodeId]);
 
-  const reactFlowEdges: Edge[] = useMemo(() => {
+  const initialEdges: Edge[] = useMemo(() => {
     return flowEdges.map((edge) => ({
       id: edge.id,
       source: edge.source,
@@ -132,14 +145,18 @@ const StoryTreeInner: React.FC<StoryTreeProps> = ({
     }));
   }, [flowEdges]);
 
-  // React Flow internal state handlers
-  const onNodesChange: OnNodesChange = useCallback((_changes: NodeChange[]) => {
-    // No-op for now - could forward to prop callback if needed
-  }, []);
+  // Use React Flow's state management for proper MiniMap integration
+  const [reactFlowNodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [reactFlowEdges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
-  const onEdgesChange: OnEdgesChange = useCallback((_changes: EdgeChange[]) => {
-    // No-op for now
-  }, []);
+  // Update nodes/edges when initial data changes
+  useEffect(() => {
+    setNodes(initialNodes);
+  }, [initialNodes, setNodes]);
+
+  useEffect(() => {
+    setEdges(initialEdges);
+  }, [initialEdges, setEdges]);
 
   const handleEdgeClick = useCallback(
     (_event: React.MouseEvent, edge: Edge) => {

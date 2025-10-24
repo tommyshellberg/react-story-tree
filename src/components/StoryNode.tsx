@@ -78,8 +78,15 @@ const styles = {
     marginTop: '4px',
     wordWrap: 'break-word' as const,
     overflowWrap: 'break-word' as const,
-    maxHeight: '150px',
-    overflow: 'auto',
+    maxHeight: '100px',
+    overflowY: 'auto' as const,
+    overflowX: 'hidden' as const,
+    paddingRight: '4px',
+  } as React.CSSProperties,
+
+  contentScrollbar: {
+    scrollbarWidth: 'thin' as const,
+    scrollbarColor: '#ccc #f5f5f5',
   } as React.CSSProperties,
 
   errorMessage: {
@@ -125,12 +132,14 @@ const StoryNodeComponent = (props: StoryNodeProps) => {
     // Extract data with safe defaults
     const {
       storyNode,
-      isLeaf = false, // Default to branch node if undefined
+      isLeaf = false,
       hasError = false,
       errorMessage,
       isLoading = false,
       className,
       onClick,
+      theme,
+      showNodeId = false,
     } = data;
 
     // LIBRARY PATTERN: Validate required nested data
@@ -147,16 +156,42 @@ const StoryNodeComponent = (props: StoryNodeProps) => {
       );
     }
 
-    const { id, title, content } = storyNode;
+    const { id, title, content, customId } = storyNode;
 
-    // Build composite styles based on state
-    const nodeStyle: React.CSSProperties = {
-      ...styles.node,
-      ...(selected ? styles.nodeSelected : {}),
-      ...(isLeaf ? styles.nodeLeaf : {}),
-      ...(hasError ? styles.nodeError : {}),
-      ...(isLoading ? styles.nodeLoading : {}),
-    };
+    // Build composite styles based on state with theme overrides
+    let nodeStyle: React.CSSProperties = { ...styles.node };
+
+    // Apply leaf/branch styling
+    if (isLeaf) {
+      nodeStyle = {
+        ...nodeStyle,
+        borderColor: theme?.leafBorderColor || '#4caf50',
+        background: theme?.leafBackgroundColor || '#f1f8e9',
+      };
+    } else {
+      nodeStyle = {
+        ...nodeStyle,
+        borderColor: theme?.branchBorderColor || '#b1b1b7',
+        background: theme?.branchBackgroundColor || '#ffffff',
+      };
+    }
+
+    // Apply selected styling
+    if (selected) {
+      nodeStyle = {
+        ...nodeStyle,
+        borderColor: theme?.selectedBorderColor || '#2196f3',
+        boxShadow: '0 4px 12px rgba(33, 150, 243, 0.3)',
+      };
+    }
+
+    // Apply error/loading styles
+    if (hasError) {
+      nodeStyle = { ...nodeStyle, ...styles.nodeError };
+    }
+    if (isLoading) {
+      nodeStyle = { ...nodeStyle, ...styles.nodeLoading };
+    }
 
     // Handle node clicks
     const handleClick = () => {
@@ -206,7 +241,26 @@ const StoryNodeComponent = (props: StoryNodeProps) => {
         {/* Node Content */}
         <div style={styles.title}>{title}</div>
 
-        {content && <div style={styles.content}>{content}</div>}
+        {showNodeId && customId && (
+          <div style={{
+            fontSize: '10px',
+            color: '#999',
+            marginTop: '-4px',
+            marginBottom: '8px',
+            fontFamily: 'monospace'
+          }}>
+            {customId}
+          </div>
+        )}
+
+        {content && (
+          <div
+            className="nowheel"
+            style={{ ...styles.content, ...styles.contentScrollbar }}
+          >
+            {content}
+          </div>
+        )}
 
         {/* Error State */}
         {hasError && errorMessage && (

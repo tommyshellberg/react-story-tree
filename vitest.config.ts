@@ -18,14 +18,16 @@ export default defineConfig({
     // Coverage configuration
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html'],
+      reporter: ['text', 'json', 'html', 'lcov'],
       exclude: [
         'node_modules/',
+        'dist/',
         'tests/',
         '**/*.test.ts',
         '**/*.test.tsx',
         '**/index.ts', // Index files are just exports
         '**/*.config.ts',
+        'src/types/**', // Type definitions have no executable code
       ],
     },
 

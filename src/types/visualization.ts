@@ -51,6 +51,12 @@ export interface FlowNodeData extends Record<string, unknown> {
 
   /** Optional click handler for this specific node */
   onClick?: (nodeId: string) => void;
+
+  /** Theme/styling options */
+  theme?: VisualizationTheme;
+
+  /** Whether to show the node ID (customId) */
+  showNodeId?: boolean;
 }
 
 /**
@@ -75,26 +81,26 @@ export type FlowEdge = Edge<FlowEdgeData>;
  * Theme/styling options for the tree visualization.
  */
 export interface VisualizationTheme {
-  /** Primary color for nodes. Default: '#2196f3' */
-  primaryColor?: string;
+  /** Border color for leaf nodes. Default: '#4caf50' */
+  leafBorderColor?: string;
 
-  /** Color for leaf nodes. Default: '#f44336' */
-  leafColor?: string;
+  /** Background color for leaf nodes. Default: '#f1f8e9' */
+  leafBackgroundColor?: string;
 
-  /** Color for error nodes. Default: '#d32f2f' */
-  errorColor?: string;
+  /** Border color for branch nodes. Default: '#b1b1b7' */
+  branchBorderColor?: string;
 
-  /** Background color for node cards. Default: '#ffffff' */
-  nodeBackgroundColor?: string;
+  /** Background color for branch nodes. Default: '#ffffff' */
+  branchBackgroundColor?: string;
 
-  /** Text color. Default: '#000000' */
+  /** Border color for selected nodes. Default: '#2196f3' */
+  selectedBorderColor?: string;
+
+  /** Text color. Default: '#1a1a1a' */
   textColor?: string;
 
-  /** Edge color. Default: '#b1b1b7' */
-  edgeColor?: string;
-
-  /** Edge type: 'default', 'step', 'smoothstep', 'straight'. Default: 'smoothstep' */
-  edgeType?: 'default' | 'step' | 'smoothstep' | 'straight';
+  /** Secondary text color. Default: '#666' */
+  secondaryTextColor?: string;
 }
 
 /**
