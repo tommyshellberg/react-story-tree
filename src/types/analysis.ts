@@ -81,9 +81,6 @@ export interface PathAnalysisResult {
 
   /** Suggestions for this specific path */
   suggestions: Suggestion[];
-
-  /** Quality score for this path (0-100) */
-  score: number;
 }
 
 /**
@@ -93,7 +90,6 @@ export interface PathAnalysisResult {
  * @example
  * ```typescript
  * const result: StoryAnalysisResult = {
- *   overallScore: 85,
  *   pathResults: [...],
  *   allIssues: [...],
  *   allSuggestions: [...],
@@ -107,12 +103,6 @@ export interface PathAnalysisResult {
  * ```
  */
 export interface StoryAnalysisResult {
-  /**
-   * Overall quality score (0-100).
-   * Based on aggregated scores from all paths.
-   */
-  overallScore: number;
-
   /** Results from analyzing each individual path */
   pathResults: PathAnalysisResult[];
 

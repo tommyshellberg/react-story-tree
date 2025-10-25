@@ -7,7 +7,11 @@ import { describe, it, expect } from 'vitest';
 import type { StoryNode, TreeStructure, StoryPath } from '../../src/types';
 
 // We'll implement these functions in src/utils/traversal.ts
-import { traverseTree, concatenatePath } from '../../src/utils/traversal';
+import {
+  traverseTree,
+  concatenatePath,
+  buildPathFromNodes,
+} from '../../src/utils/traversal';
 
 describe('traverseTree', () => {
   /**
@@ -627,5 +631,183 @@ describe('concatenatePath', () => {
     expect(narrative).not.toMatch(/^\s+/); // No leading whitespace
     expect(narrative).not.toMatch(/\s+$/); // No trailing whitespace
     expect(narrative.trim()).toBe(narrative); // Already trimmed
+  });
+});
+
+describe('buildPathFromNodes', () => {
+  /**
+   * Test Case 1: Build a valid path from manually selected nodes
+   */
+  it('should build a path from valid node IDs', () => {
+    // Arrange
+    const nodes = new Map<string, StoryNode>([
+      ['node-1', { id: 'node-1', title: 'Start', content: 'Begin' }],
+      [
+        'node-2',
+        {
+          id: 'node-2',
+          title: 'Middle',
+          content: 'Continue',
+          decisionText: 'Go forward',
+        },
+      ],
+      [
+        'node-3',
+        {
+          id: 'node-3',
+          title: 'End',
+          content: 'Finish',
+          decisionText: 'Conclude',
+        },
+      ],
+    ]);
+
+    const nodeIds = ['node-1', 'node-2', 'node-3'];
+
+    // Act
+    const path = buildPathFromNodes(nodeIds, nodes);
+
+    // Assert
+    expect(path.nodeIds).toEqual(['node-1', 'node-2', 'node-3']);
+    expect(path.nodes).toHaveLength(3);
+    expect(path.nodes[0]?.id).toBe('node-1');
+    expect(path.nodes[1]?.id).toBe('node-2');
+    expect(path.nodes[2]?.id).toBe('node-3');
+    expect(path.decisions).toEqual(['Go forward', 'Conclude']);
+  });
+
+  /**
+   * Test Case 2: Validate path connections with structure
+   */
+  it('should validate path is valid when structure provided', () => {
+    // Arrange
+    const nodes = new Map<string, StoryNode>([
+      ['node-1', { id: 'node-1', title: 'Start', content: 'Begin' }],
+      ['node-2', { id: 'node-2', title: 'Middle', content: 'Continue' }],
+    ]);
+
+    const structure: TreeStructure = {
+      'node-1': ['node-2'],
+      'node-2': [],
+    };
+
+    const nodeIds = ['node-1', 'node-2'];
+
+    // Act & Assert - should not throw
+    expect(() =>
+      buildPathFromNodes(nodeIds, nodes, structure)
+    ).not.toThrow();
+  });
+
+  /**
+   * Test Case 3: Throw error for invalid path connection
+   */
+  it('should throw error when nodes are not connected', () => {
+    // Arrange
+    const nodes = new Map<string, StoryNode>([
+      ['node-1', { id: 'node-1', title: 'Start', content: 'Begin' }],
+      ['node-2', { id: 'node-2', title: 'Middle', content: 'Continue' }],
+      ['node-3', { id: 'node-3', title: 'Other', content: 'Different' }],
+    ]);
+
+    const structure: TreeStructure = {
+      'node-1': ['node-2'], // node-1 only connects to node-2
+      'node-2': [],
+      'node-3': [],
+    };
+
+    const nodeIds = ['node-1', 'node-3']; // Invalid: node-1 doesn't connect to node-3
+
+    // Act & Assert
+    expect(() => buildPathFromNodes(nodeIds, nodes, structure)).toThrow(
+      /does not connect to/
+    );
+  });
+
+  /**
+   * Test Case 4: Throw error for missing node
+   */
+  it('should throw error when node ID not found', () => {
+    // Arrange
+    const nodes = new Map<string, StoryNode>([
+      ['node-1', { id: 'node-1', title: 'Start', content: 'Begin' }],
+    ]);
+
+    const nodeIds = ['node-1', 'nonexistent-node'];
+
+    // Act & Assert
+    expect(() => buildPathFromNodes(nodeIds, nodes)).toThrow(
+      /not found in nodes map/
+    );
+  });
+
+  /**
+   * Test Case 5: Throw error for empty node list
+   */
+  it('should throw error for empty node ID list', () => {
+    // Arrange
+    const nodes = new Map<string, StoryNode>();
+    const nodeIds: string[] = [];
+
+    // Act & Assert
+    expect(() => buildPathFromNodes(nodeIds, nodes)).toThrow(
+      /empty node list/
+    );
+  });
+
+  /**
+   * Test Case 6: Handle single node path
+   */
+  it('should handle a single-node path', () => {
+    // Arrange
+    const nodes = new Map<string, StoryNode>([
+      ['node-1', { id: 'node-1', title: 'Only', content: 'Single' }],
+    ]);
+
+    const nodeIds = ['node-1'];
+
+    // Act
+    const path = buildPathFromNodes(nodeIds, nodes);
+
+    // Assert
+    expect(path.nodeIds).toEqual(['node-1']);
+    expect(path.nodes).toHaveLength(1);
+    expect(path.decisions).toEqual([]);
+  });
+
+  /**
+   * Test Case 7: Handle nodes without decision text
+   */
+  it('should handle nodes missing decisionText gracefully', () => {
+    // Arrange
+    const nodes = new Map<string, StoryNode>([
+      ['node-1', { id: 'node-1', title: 'Start', content: 'Begin' }],
+      ['node-2', { id: 'node-2', title: 'Middle', content: 'Continue' }], // No decisionText
+    ]);
+
+    const nodeIds = ['node-1', 'node-2'];
+
+    // Act
+    const path = buildPathFromNodes(nodeIds, nodes);
+
+    // Assert
+    expect(path.decisions).toEqual([]); // No decisions since node-2 has no decisionText
+  });
+
+  /**
+   * Test Case 8: Validation is optional
+   */
+  it('should allow invalid paths when structure not provided', () => {
+    // Arrange
+    const nodes = new Map<string, StoryNode>([
+      ['node-1', { id: 'node-1', title: 'Start', content: 'Begin' }],
+      ['node-3', { id: 'node-3', title: 'Other', content: 'Different' }],
+    ]);
+
+    // Invalid path (no connection), but no structure provided for validation
+    const nodeIds = ['node-1', 'node-3'];
+
+    // Act & Assert - should NOT throw because no structure provided
+    expect(() => buildPathFromNodes(nodeIds, nodes)).not.toThrow();
   });
 });

@@ -11,8 +11,8 @@ export { StoryNode, StoryTree } from './components';
 export type { StoryTreeProps } from './components';
 
 // Utility functions
-export { traverseTree, concatenatePath, buildFlowStructure, applyLayout } from './utils';
+export { traverseTree, concatenatePath, buildPathFromNodes, buildFlowStructure, applyLayout } from './utils';
 export type { FlowStructure } from './utils';
 
-// Analysis functions will be exported here once implemented
-// export { analyzeStory, traversePaths } from './analysis';
+// Analysis functions (LLM-powered story critique)
+export { analyzeStory, analyzeStoryPath, buildAnalysisPrompt, parseAnalysisResponse } from './analysis';

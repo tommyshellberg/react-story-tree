@@ -168,3 +168,84 @@ export function concatenatePath(path: StoryPath): string {
   // Join all segments with double newlines for readability
   return segments.join('\n\n').trim();
 }
+
+/**
+ * Builds a StoryPath from a sequence of manually selected node IDs.
+ *
+ * Useful for interactive path building where users click nodes in a tree
+ * visualization to construct a custom path for analysis.
+ *
+ * @param nodeIds - Array of node IDs in sequential order (root to leaf)
+ * @param nodes - Map of all story nodes
+ * @param structure - Tree structure for validation (optional)
+ * @returns A complete StoryPath ready for analysis
+ * @throws {Error} If any node ID is missing or path is invalid
+ *
+ * @example
+ * ```typescript
+ * // User clicked: node-1 → node-2 → node-4
+ * const selectedNodeIds = ['node-1', 'node-2', 'node-4'];
+ *
+ * const path = buildPathFromNodes(selectedNodeIds, nodes);
+ * const result = await analyzeStoryPath(path, options);
+ * ```
+ */
+export function buildPathFromNodes(
+  nodeIds: string[],
+  nodes: Map<string, StoryNode>,
+  structure?: TreeStructure
+): StoryPath {
+  if (nodeIds.length === 0) {
+    throw new Error('Cannot build path from empty node list');
+  }
+
+  // Validate all nodes exist
+  for (const nodeId of nodeIds) {
+    if (!nodes.has(nodeId)) {
+      throw new Error(`Node "${nodeId}" not found in nodes map`);
+    }
+  }
+
+  // If structure provided, validate path is valid (each node connects to next)
+  if (structure) {
+    for (let i = 0; i < nodeIds.length - 1; i++) {
+      const currentId = nodeIds[i];
+      const nextId = nodeIds[i + 1];
+      const children = structure[currentId!] || [];
+
+      if (!children.includes(nextId!)) {
+        throw new Error(
+          `Invalid path: "${currentId}" does not connect to "${nextId}". ` +
+            `Valid children are: ${children.join(', ') || 'none'}`
+        );
+      }
+    }
+  }
+
+  // Build the path
+  const pathNodes: StoryNode[] = [];
+  const decisions: string[] = [];
+
+  for (let i = 0; i < nodeIds.length; i++) {
+    const nodeId = nodeIds[i];
+    const node = nodes.get(nodeId!);
+
+    if (!node) {
+      // Should never happen due to validation above, but TypeScript needs this
+      throw new Error(`Node "${nodeId}" not found`);
+    }
+
+    pathNodes.push(node);
+
+    // Add decision text for transitions (skip first node)
+    if (i > 0 && node.decisionText) {
+      decisions.push(node.decisionText);
+    }
+  }
+
+  return {
+    nodeIds,
+    nodes: pathNodes,
+    decisions,
+  };
+}
