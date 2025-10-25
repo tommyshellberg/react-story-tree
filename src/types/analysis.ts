@@ -138,44 +138,44 @@ export interface StoryAnalysisResult {
  * Configuration options for story analysis.
  */
 export interface AnalysisOptions {
-  /**
-   * LLM model to use for analysis.
-   * Should be a model instance from Vercel AI SDK.
-   * @example openai('gpt-4-turbo') or anthropic('claude-3-5-sonnet-20241022')
-   */
-  model: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+	/**
+	 * LLM model to use for analysis.
+	 * Should be a model instance from Vercel AI SDK.
+	 * @example openai('gpt-5-mini') or anthropic('claude-3-5-sonnet-20241022')
+	 */
+	model: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
-  /**
-   * Starting node ID for analysis.
-   * If not provided, the library will attempt to find the root node.
-   */
-  rootNodeId?: string;
+	/**
+	 * Starting node ID for analysis.
+	 * If not provided, the library will attempt to find the root node.
+	 */
+	rootNodeId?: string;
 
-  /**
-   * Which critique rules to apply.
-   * If not specified, all default rules are applied.
-   */
-  rules?: {
-    continuity?: boolean;
-    logic?: boolean;
-    character?: boolean;
-    temporal?: boolean;
-  };
+	/**
+	 * Which critique rules to apply.
+	 * If not specified, all default rules are applied.
+	 */
+	rules?: {
+		continuity?: boolean;
+		logic?: boolean;
+		character?: boolean;
+		temporal?: boolean;
+	};
 
-  /**
-   * Custom instructions to add to the analysis prompt.
-   * Useful for domain-specific requirements.
-   */
-  customInstructions?: string;
+	/**
+	 * Custom instructions to add to the analysis prompt.
+	 * Useful for domain-specific requirements.
+	 */
+	customInstructions?: string;
 
-  /**
-   * Whether to include detailed context in issues.
-   * Default: true
-   */
-  includeContext?: boolean;
+	/**
+	 * Whether to include detailed context in issues.
+	 * Default: true
+	 */
+	includeContext?: boolean;
 
-  /**
-   * Maximum number of tokens for the LLM response.
-   */
-  maxTokens?: number;
+	/**
+	 * Maximum number of tokens for the LLM response.
+	 */
+	maxTokens?: number;
 }

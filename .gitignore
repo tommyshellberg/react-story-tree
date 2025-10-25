@@ -45,3 +45,7 @@ Thumbs.db
 *.log
 *.tmp
 .cache/
+
+# Evaluation results (don't commit)
+evaluation/results/
+.env.evaluation

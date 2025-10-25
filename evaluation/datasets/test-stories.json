@@ -1,0 +1,301 @@
+[
+  {
+    "id": "continuity-001",
+    "name": "Disappearing Sword",
+    "difficulty": "easy",
+    "category": "continuity",
+    "nodes": [
+      {
+        "id": "node-1",
+        "customId": "start",
+        "title": "The Cave Entrance",
+        "content": "You find a rusty iron sword lying near the cave entrance. You pick it up and feel its weight in your hand."
+      },
+      {
+        "id": "node-2",
+        "customId": "enter-cave",
+        "title": "Inside the Cave",
+        "content": "You walk into the dark cave. Suddenly, a dragon appears! You try to defend yourself, but realize you have no weapon.",
+        "decisionText": "Enter the cave"
+      }
+    ],
+    "structure": {
+      "node-1": ["node-2"],
+      "node-2": []
+    },
+    "rootId": "node-1",
+    "expectedIssues": [
+      {
+        "severity": "error",
+        "type": "continuity",
+        "nodeId": "node-2",
+        "message": "Sword disappeared - character picked up sword in node-1 but has no weapon in node-2"
+      }
+    ]
+  },
+  {
+    "id": "logic-001",
+    "name": "Dead Character Returns",
+    "difficulty": "easy",
+    "category": "logic",
+    "nodes": [
+      {
+        "id": "node-1",
+        "customId": "battle",
+        "title": "The Final Battle",
+        "content": "You strike the dark wizard with your sword. He falls to the ground, lifeless. His reign of terror is finally over."
+      },
+      {
+        "id": "node-2",
+        "customId": "celebration",
+        "title": "Victory Celebration",
+        "content": "The village celebrates your victory. The dark wizard approaches you and thanks you for sparing his life.",
+        "decisionText": "Return to village"
+      }
+    ],
+    "structure": {
+      "node-1": ["node-2"],
+      "node-2": []
+    },
+    "rootId": "node-1",
+    "expectedIssues": [
+      {
+        "severity": "error",
+        "type": "character",
+        "nodeId": "node-2",
+        "message": "Dead character reappears - dark wizard was killed in node-1 but appears alive in node-2"
+      },
+      {
+        "severity": "error",
+        "type": "logic",
+        "nodeId": "node-2",
+        "message": "Logical contradiction - wizard thanks for 'sparing his life' but was killed in previous node"
+      }
+    ]
+  },
+  {
+    "id": "temporal-001",
+    "name": "Time Travel Paradox",
+    "difficulty": "medium",
+    "category": "temporal",
+    "nodes": [
+      {
+        "id": "node-1",
+        "customId": "morning",
+        "title": "Morning Market",
+        "content": "You arrive at the bustling morning market as the sun rises. You have 3 hours until your noon meeting."
+      },
+      {
+        "id": "node-2",
+        "customId": "evening",
+        "title": "Shopping",
+        "content": "You spend the afternoon browsing shops. As the sun sets, you check your watch - it's 6 PM.",
+        "decisionText": "Browse the shops"
+      },
+      {
+        "id": "node-3",
+        "customId": "meeting",
+        "title": "The Meeting",
+        "content": "You arrive exactly on time for your noon meeting at the tavern.",
+        "decisionText": "Head to the tavern"
+      }
+    ],
+    "structure": {
+      "node-1": ["node-2"],
+      "node-2": ["node-3"],
+      "node-3": []
+    },
+    "rootId": "node-1",
+    "expectedIssues": [
+      {
+        "severity": "error",
+        "type": "temporal",
+        "nodeId": "node-3",
+        "message": "Time paradox - it was 6 PM in node-2 but then noon in node-3 without explanation"
+      }
+    ]
+  },
+  {
+    "id": "character-001",
+    "name": "Inconsistent Character Knowledge",
+    "difficulty": "medium",
+    "category": "character",
+    "nodes": [
+      {
+        "id": "node-1",
+        "customId": "intro",
+        "title": "Meeting the Stranger",
+        "content": "A cloaked stranger approaches. 'My name is Marcus,' he says. 'I've come from the northern kingdoms.'"
+      },
+      {
+        "id": "node-2",
+        "customId": "conversation",
+        "title": "Deep Conversation",
+        "content": "You ask the stranger about his home. 'I've never been to the northern kingdoms,' he replies.",
+        "decisionText": "Ask about his home"
+      }
+    ],
+    "structure": {
+      "node-1": ["node-2"],
+      "node-2": []
+    },
+    "rootId": "node-1",
+    "expectedIssues": [
+      {
+        "severity": "error",
+        "type": "character",
+        "nodeId": "node-2",
+        "message": "Character statement contradiction - Marcus said he came from northern kingdoms in node-1 but claims to have never been there in node-2"
+      }
+    ]
+  },
+  {
+    "id": "clean-001",
+    "name": "Clean Linear Story",
+    "difficulty": "easy",
+    "category": "clean",
+    "nodes": [
+      {
+        "id": "node-1",
+        "customId": "start",
+        "title": "The Journey Begins",
+        "content": "You set off on your adventure, packing your sword and shield into your travel bag."
+      },
+      {
+        "id": "node-2",
+        "customId": "forest",
+        "title": "Through the Forest",
+        "content": "You walk through the dense forest, using your sword to cut through thick vines blocking the path.",
+        "decisionText": "Enter the forest"
+      },
+      {
+        "id": "node-3",
+        "customId": "arrival",
+        "title": "Arrival",
+        "content": "After hours of travel, you arrive at the village. You sheathe your sword and approach the gates.",
+        "decisionText": "Continue walking"
+      }
+    ],
+    "structure": {
+      "node-1": ["node-2"],
+      "node-2": ["node-3"],
+      "node-3": []
+    },
+    "rootId": "node-1",
+    "expectedIssues": []
+  },
+  {
+    "id": "continuity-002",
+    "name": "Location Teleportation",
+    "difficulty": "medium",
+    "category": "continuity",
+    "nodes": [
+      {
+        "id": "node-1",
+        "customId": "tower",
+        "title": "The High Tower",
+        "content": "You climb to the top of the wizard's tower, hundreds of feet above the ground. The wind howls around you."
+      },
+      {
+        "id": "node-2",
+        "customId": "basement",
+        "title": "Underground Chamber",
+        "content": "You find yourself in the damp basement below the tower, surrounded by ancient stone walls.",
+        "decisionText": "Look around"
+      }
+    ],
+    "structure": {
+      "node-1": ["node-2"],
+      "node-2": []
+    },
+    "rootId": "node-1",
+    "expectedIssues": [
+      {
+        "severity": "warning",
+        "type": "continuity",
+        "nodeId": "node-2",
+        "message": "Unexplained location change - character was at top of tower in node-1 but suddenly in basement in node-2 without transition"
+      }
+    ]
+  },
+  {
+    "id": "logic-002",
+    "name": "Impossible Physics",
+    "difficulty": "easy",
+    "category": "logic",
+    "nodes": [
+      {
+        "id": "node-1",
+        "customId": "cliff",
+        "title": "The Cliff Edge",
+        "content": "You stand at the edge of a cliff, looking down at the raging river 200 feet below. There's no way down."
+      },
+      {
+        "id": "node-2",
+        "customId": "jump",
+        "title": "The Leap",
+        "content": "You jump off the cliff and land safely in the river below, emerging unharmed and continuing your journey.",
+        "decisionText": "Jump"
+      }
+    ],
+    "structure": {
+      "node-1": ["node-2"],
+      "node-2": []
+    },
+    "rootId": "node-1",
+    "expectedIssues": [
+      {
+        "severity": "warning",
+        "type": "logic",
+        "nodeId": "node-2",
+        "message": "Implausible outcome - jumping 200 feet into a raging river and emerging unharmed is unrealistic without explanation (magic, special abilities, etc.)"
+      }
+    ]
+  },
+  {
+    "id": "complex-001",
+    "name": "Multiple Issues",
+    "difficulty": "hard",
+    "category": "multiple",
+    "nodes": [
+      {
+        "id": "node-1",
+        "customId": "start",
+        "title": "Morning in the Castle",
+        "content": "It's 8 AM. You wake in the castle and put on your golden amulet, a gift from your deceased father who died last year. You head to breakfast."
+      },
+      {
+        "id": "node-2",
+        "customId": "breakfast",
+        "title": "The Breakfast Hall",
+        "content": "At breakfast, you see your father sitting at the head of the table. He notices you're not wearing any jewelry and scolds you for it. The grandfather clock chimes 6 PM.",
+        "decisionText": "Go to breakfast"
+      }
+    ],
+    "structure": {
+      "node-1": ["node-2"],
+      "node-2": []
+    },
+    "rootId": "node-1",
+    "expectedIssues": [
+      {
+        "severity": "error",
+        "type": "character",
+        "nodeId": "node-2",
+        "message": "Dead character appears - father was stated as deceased in node-1 but appears alive in node-2"
+      },
+      {
+        "severity": "error",
+        "type": "continuity",
+        "nodeId": "node-2",
+        "message": "Amulet disappeared - character put on amulet in node-1 but father says they're not wearing jewelry in node-2"
+      },
+      {
+        "severity": "error",
+        "type": "temporal",
+        "nodeId": "node-2",
+        "message": "Time inconsistency - it was 8 AM in node-1 but clock chimes 6 PM in node-2 for breakfast"
+      }
+    ]
+  }
+]

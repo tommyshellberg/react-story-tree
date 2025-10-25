@@ -289,18 +289,18 @@ Hope this helps!`;
       );
 
       const customOptions: AnalysisOptions = {
-        model: 'gpt-4-turbo',
-        maxTokens: 2000,
-      };
+				model: "gpt-5-mini",
+				maxTokens: 2000,
+			};
 
       await analyzeStoryPath(mockPath, customOptions);
 
       expect(generateText).toHaveBeenCalledWith(
-        expect.objectContaining({
-          model: 'gpt-4-turbo',
-          maxTokens: 2000,
-        })
-      );
+				expect.objectContaining({
+					model: "gpt-5-mini",
+					maxTokens: 2000,
+				})
+			);
     });
 
     it('should handle LLM errors gracefully', async () => {

@@ -46,35 +46,35 @@ export function buildAnalysisPrompt(
 
   if (enabledRules.continuity) {
     ruleInstructions.push(
-      '- **Continuity**: Check for consistent details (objects, locations, facts that appear/disappear)'
+      '- **Continuity**: Flag ONLY when objects/facts explicitly disappear or contradict earlier statements. Example: "You picked up the sword" then "you have no weapon" without explanation.'
     );
   }
 
   if (enabledRules.logic) {
     ruleInstructions.push(
-      '- **Logic**: Identify impossible actions, contradictory outcomes, or illogical progressions'
+      '- **Logic**: Flag ONLY clear contradictions or impossible outcomes. Example: "The wizard dies" then "the wizard thanks you" in the next node.'
     );
   }
 
   if (enabledRules.character) {
     ruleInstructions.push(
-      '- **Character tracking**: Ensure characters remain consistent (e.g., don\'t appear after death)'
+      '- **Character**: Flag ONLY when a character directly contradicts their own statements or appears after explicitly dying. Example: "I come from the north" then "I\'ve never been to the north."'
     );
   }
 
   if (enabledRules.temporal) {
     ruleInstructions.push(
-      '- **Temporal consistency**: Check for time-related issues (events happening out of order, impossible timelines)'
+      '- **Temporal**: Flag ONLY impossible time progressions. Example: "It is 6 PM" then "You arrive for your noon meeting" without time travel explanation.'
     );
   }
 
   const rulesSection =
     ruleInstructions.length > 0
-      ? `Analyze the following aspects:\n${ruleInstructions.join('\n')}`
+      ? `**IMPORTANT: Be conservative. Only flag CLEAR, OBVIOUS errors.**\n\nAnalyze these aspects:\n${ruleInstructions.join('\n')}`
       : 'Perform a general quality analysis.';
 
   const customSection = options.customInstructions
-    ? `\n\nAdditional instructions:\n${options.customInstructions}`
+    ? `\n\nAdditional requirements:\n${options.customInstructions}`
     : '';
 
   const nodeIdMap = path.nodes
@@ -84,36 +84,48 @@ export function buildAnalysisPrompt(
     )
     .join('\n');
 
-  const prompt = `You are a narrative quality analyst. Analyze the following branching story path for issues and provide suggestions.
+  const prompt = `You are a narrative quality analyst for branching story paths. Your job is to find CLEAR ERRORS, not to critique writing style.
 
 ${rulesSection}${customSection}
+
+**What to IGNORE (do NOT flag these):**
+- Stylistic choices (brief descriptions, simple language)
+- Missing details that could be explained later
+- Vague timeframes ("hours later", "eventually")
+- Incomplete character backstories
+- Things that are ambiguous but not contradictory
+- Minor plausibility issues (unless explicitly impossible)
+
+**When in doubt, DO NOT flag it.** Only flag issues you are confident about.
 
 **Story Path**:
 ${narrative}
 
-**Node Reference Map** (use these IDs when referencing specific nodes):
+**Node Reference Map** (use these exact IDs in your response):
 ${nodeIdMap}
 
 **Output Format**:
-Respond with a JSON object (and ONLY JSON, no additional text) with this structure:
+Respond with a JSON object (and ONLY JSON, no markdown, no explanations) with this structure:
 {
   "issues": [
     {
       "severity": "error" | "warning" | "info",
       "type": "continuity" | "logic" | "character" | "temporal" | "other",
-      "nodeId": "the node ID where the issue occurs",
-      "message": "description of the issue",
-      "context": "optional quote from the content showing the issue"
+      "nodeId": "exact node ID from the map above",
+      "message": "clear description of the contradiction or error",
+      "context": "optional quote showing the issue"
     }
   ],
   "suggestions": [
     {
-      "message": "improvement suggestion",
-      "nodeId": "optional node ID this applies to",
+      "message": "concrete improvement suggestion",
+      "nodeId": "optional node ID",
       "category": "pacing" | "depth" | "clarity" | "engagement" | "other"
     }
   ]
-}`;
+}
+
+Remember: Empty arrays are fine if there are no clear errors. Quality varies - not every story needs issues flagged.`;
 
   return prompt;
 }
@@ -255,7 +267,7 @@ export function parseAnalysisResponse(
  *
  * // Analyze just that path
  * const result = await analyzeStoryPath(selectedPath, {
- *   model: openai('gpt-4-turbo'),
+ *   model: openai('gpt-5-mini'),
  *   rules: { continuity: true, logic: true }
  * });
  *
@@ -398,7 +410,7 @@ function deduplicateSuggestions(suggestions: Suggestion[]): Suggestion[] {
  *
  * // For a comprehensive report (expensive!)
  * const result = await analyzeStory(nodes, structure, {
- *   model: openai('gpt-4-turbo'),
+ *   model: openai('gpt-5-mini'),
  *   rules: { continuity: true, logic: true },
  * });
  *
