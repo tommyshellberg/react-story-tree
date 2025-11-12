@@ -87,7 +87,16 @@ describe('analyzer', () => {
   };
 
   const mockOptions: AnalysisOptions = {
-    model: 'mock-model',
+    provider: 'anthropic',
+    apiKey: 'test-api-key-12345',
+    modelName: 'claude-3-5-sonnet-20241022',
+    rootNodeId: 'node-1',
+  };
+
+  const mockOpenAIOptions: AnalysisOptions = {
+    provider: 'openai',
+    apiKey: 'test-openai-key-67890',
+    modelName: 'gpt-5-mini',
     rootNodeId: 'node-1',
   };
 
@@ -243,6 +252,66 @@ Hope this helps!`;
     });
   });
 
+  describe('LLM Provider Support', () => {
+    it('should work with Anthropic provider', async () => {
+      const mockLLMResponse = {
+        text: JSON.stringify({
+          issues: [],
+          suggestions: [],
+        }),
+      };
+
+      (generateText as ReturnType<typeof vi.fn>).mockResolvedValue(
+        mockLLMResponse
+      );
+
+      const result = await analyzeStoryPath(mockPath, mockOptions);
+
+      expect(result.path).toEqual(mockPath);
+      expect(generateText).toHaveBeenCalledTimes(1);
+    });
+
+    it('should work with OpenAI provider', async () => {
+      const mockLLMResponse = {
+        text: JSON.stringify({
+          issues: [],
+          suggestions: [],
+        }),
+      };
+
+      (generateText as ReturnType<typeof vi.fn>).mockResolvedValue(
+        mockLLMResponse
+      );
+
+      const result = await analyzeStoryPath(mockPath, mockOpenAIOptions);
+
+      expect(result.path).toEqual(mockPath);
+      expect(generateText).toHaveBeenCalledTimes(1);
+    });
+
+    it('should throw error for missing API key', async () => {
+      const optionsWithoutKey: AnalysisOptions = {
+        provider: 'anthropic',
+        apiKey: '',
+      };
+
+      await expect(
+        analyzeStoryPath(mockPath, optionsWithoutKey)
+      ).rejects.toThrow('API key is required');
+    });
+
+    it('should throw error for unsupported provider', async () => {
+      const optionsWithBadProvider: AnalysisOptions = {
+        provider: 'unsupported' as any,
+        apiKey: 'test-key',
+      };
+
+      await expect(
+        analyzeStoryPath(mockPath, optionsWithBadProvider)
+      ).rejects.toThrow('Unsupported LLM provider');
+    });
+  });
+
   describe('analyzeStoryPath', () => {
     it('should analyze a single path with LLM', async () => {
       const mockLLMResponse = {
@@ -289,7 +358,9 @@ Hope this helps!`;
       );
 
       const customOptions: AnalysisOptions = {
-				model: "gpt-5-mini",
+				provider: 'anthropic',
+				apiKey: 'test-key',
+				modelName: 'claude-3-5-haiku-20241022',
 				maxTokens: 2000,
 			};
 
@@ -297,7 +368,7 @@ Hope this helps!`;
 
       expect(generateText).toHaveBeenCalledWith(
 				expect.objectContaining({
-					model: "gpt-5-mini",
+					prompt: expect.any(String),
 					maxTokens: 2000,
 				})
 			);
@@ -311,6 +382,50 @@ Hope this helps!`;
       await expect(analyzeStoryPath(mockPath, mockOptions)).rejects.toThrow(
         'API rate limit exceeded'
       );
+    });
+
+    it('should provide context when API call fails', async () => {
+      (generateText as ReturnType<typeof vi.fn>).mockRejectedValue(
+        new Error('Network timeout')
+      );
+
+      try {
+        await analyzeStoryPath(mockPath, mockOptions);
+        expect.fail('Should have thrown error');
+      } catch (error) {
+        expect(error).toBeInstanceOf(Error);
+        const err = error as Error;
+
+        // Error should mention the provider
+        expect(err.message).toContain('anthropic');
+
+        // Error should mention what failed
+        expect(err.message).toContain('Network timeout');
+
+        // Error should include path context
+        expect(err.message).toContain('node-1');
+      }
+    });
+
+    it('should handle OpenAI authentication errors', async () => {
+      (generateText as ReturnType<typeof vi.fn>).mockRejectedValue(
+        new Error('OpenAI API error: Incorrect API key provided')
+      );
+
+      await expect(
+        analyzeStoryPath(mockPath, mockOpenAIOptions)
+      ).rejects.toThrow('Incorrect API key provided');
+    });
+
+    it('should handle whitespace-only API key', async () => {
+      const optionsWithWhitespace = {
+        provider: 'openai' as const,
+        apiKey: '   ',
+      };
+
+      await expect(
+        analyzeStoryPath(mockPath, optionsWithWhitespace)
+      ).rejects.toThrow('API key is required for openai provider');
     });
   });
 
@@ -399,7 +514,8 @@ Hope this helps!`;
 
     it('should throw error if root node not found', async () => {
       const badOptions: AnalysisOptions = {
-        model: 'mock-model',
+        provider: 'anthropic',
+        apiKey: 'test-key',
         rootNodeId: 'nonexistent-node',
       };
 
@@ -418,7 +534,8 @@ Hope this helps!`;
       );
 
       const optionsWithoutRoot: AnalysisOptions = {
-        model: 'mock-model',
+        provider: 'anthropic',
+        apiKey: 'test-key',
       };
 
       const result = await analyzeStory(
@@ -428,6 +545,73 @@ Hope this helps!`;
       );
 
       expect(result.pathResults.length).toBeGreaterThan(0);
+    });
+
+    it('should analyze all paths with OpenAI provider', async () => {
+      const mockLLMResponse1 = {
+        text: JSON.stringify({
+          issues: [],
+          suggestions: [{ message: 'Good path!', category: 'other' }],
+        }),
+      };
+
+      const mockLLMResponse2 = {
+        text: JSON.stringify({
+          issues: [
+            {
+              severity: 'warning',
+              type: 'logic',
+              nodeId: 'node-3',
+              message: 'No weapon makes fight difficult',
+            },
+          ],
+          suggestions: [],
+        }),
+      };
+
+      (generateText as ReturnType<typeof vi.fn>)
+        .mockResolvedValueOnce(mockLLMResponse1)
+        .mockResolvedValueOnce(mockLLMResponse2);
+
+      const result = await analyzeStory(
+        mockNodes,
+        mockStructure,
+        mockOpenAIOptions
+      );
+
+      expect(result.pathResults).toHaveLength(2);
+      expect(generateText).toHaveBeenCalledTimes(2);
+      expect(result.allSuggestions).toHaveLength(1);
+      expect(result.allIssues).toHaveLength(1);
+    });
+
+    it('should continue with partial results if some paths fail', async () => {
+      const successResponse = {
+        text: JSON.stringify({ issues: [], suggestions: [] }),
+      };
+
+      // First path succeeds, second fails
+      (generateText as ReturnType<typeof vi.fn>)
+        .mockResolvedValueOnce(successResponse)
+        .mockRejectedValueOnce(new Error('Rate limit'));
+
+      // Mock console.error and console.warn to suppress output during tests
+      const consoleErrorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+      const consoleWarnSpy = vi
+        .spyOn(console, 'warn')
+        .mockImplementation(() => {});
+
+      const result = await analyzeStory(mockNodes, mockStructure, mockOptions);
+
+      // Should have 1 successful result out of 2 paths attempted
+      expect(result.pathResults.length).toBe(1);
+      expect(consoleErrorSpy).toHaveBeenCalled();
+      expect(consoleWarnSpy).toHaveBeenCalled();
+
+      consoleErrorSpy.mockRestore();
+      consoleWarnSpy.mockRestore();
     });
   });
 });

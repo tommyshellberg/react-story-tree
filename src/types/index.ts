@@ -14,6 +14,7 @@ export type {
 
 // Analysis types
 export type {
+  LLMProvider,
   IssueSeverity,
   IssueType,
   AnalysisIssue,

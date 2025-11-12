@@ -4,6 +4,8 @@
  */
 
 import { generateText } from 'ai';
+import { createAnthropic } from '@ai-sdk/anthropic';
+import { createOpenAI } from '@ai-sdk/openai';
 import { traverseTree, concatenatePath } from '../utils/traversal';
 import type {
   StoryNode,
@@ -14,7 +16,78 @@ import type {
   StoryAnalysisResult,
   AnalysisIssue,
   Suggestion,
+  LLMProvider,
 } from '../types';
+
+/**
+ * Creates an AI model instance based on provider configuration.
+ *
+ * This function abstracts away the AI SDK implementation from library consumers.
+ * They don't need to know about or import AI SDK packages - just provide their
+ * API key and model name.
+ *
+ * @param provider - The LLM provider to use ('anthropic' | 'openai')
+ * @param apiKey - API key for the provider
+ * @param modelName - Optional model name (uses provider default if not specified)
+ * @returns Configured model instance for use with Vercel AI SDK
+ * @throws {Error} If provider is not supported or API key is missing
+ *
+ * @example
+ * ```typescript
+ * // Anthropic (Claude)
+ * const anthropicModel = createModel('anthropic', process.env.ANTHROPIC_API_KEY);
+ * // Returns: anthropic('claude-3-5-sonnet-20241022')
+ *
+ * // OpenAI (GPT)
+ * const openaiModel = createModel('openai', process.env.OPENAI_API_KEY);
+ * // Returns: openai('gpt-5-mini')
+ *
+ * // With custom model
+ * const customModel = createModel('openai', process.env.OPENAI_API_KEY, 'gpt-4o');
+ * ```
+ */
+function createModel(
+  provider: LLMProvider,
+  apiKey: string,
+  modelName?: string
+) {
+  if (!apiKey || apiKey.trim() === '') {
+    throw new Error(
+      `API key is required for ${provider} provider. ` +
+        `Please provide a valid API key in the analysisOptions.`
+    );
+  }
+
+  switch (provider) {
+    case 'anthropic': {
+      const defaultModel = 'claude-3-5-sonnet-20241022';
+      const model = modelName || defaultModel;
+
+      // Create anthropic provider with explicit API key
+      const anthropicProvider = createAnthropic({ apiKey });
+
+      // Return the model instance
+      return anthropicProvider(model);
+    }
+
+    case 'openai': {
+      const defaultModel = 'gpt-5-mini';
+      const model = modelName || defaultModel;
+
+      // Create OpenAI provider with explicit API key
+      const openaiProvider = createOpenAI({ apiKey });
+
+      // Return the model instance
+      return openaiProvider(model);
+    }
+
+    default:
+      throw new Error(
+        `Unsupported LLM provider: ${provider}. ` +
+          `Currently supported providers: 'anthropic', 'openai'`
+      );
+  }
+}
 
 /**
  * Builds the LLM prompt for analyzing a story path.
@@ -160,8 +233,17 @@ export function parseAnalysisResponse(
   try {
     parsed = JSON.parse(jsonText);
   } catch (error) {
+    // Truncate long responses for readability
+    const truncatedResponse =
+      jsonText.length > 500
+        ? jsonText.substring(0, 500) + '...[truncated]'
+        : jsonText;
+
     throw new Error(
-      `Failed to parse LLM response as JSON: ${error instanceof Error ? error.message : 'Unknown error'}`
+      `Failed to parse LLM response as JSON: ${error instanceof Error ? error.message : 'Unknown error'}. ` +
+        `Response text: "${truncatedResponse}". ` +
+        `This usually means the LLM didn't follow the JSON format instructions. ` +
+        `Try adjusting your prompt or using a different model.`
     );
   }
 
@@ -206,15 +288,19 @@ export function parseAnalysisResponse(
 
   // Parse suggestions array
   const suggestions: Suggestion[] = [];
+  const skippedSuggestions: unknown[] = [];
+
   if (Array.isArray(data.suggestions)) {
     for (const suggestion of data.suggestions) {
       if (!suggestion || typeof suggestion !== 'object') {
+        skippedSuggestions.push(suggestion);
         continue; // Skip invalid suggestions
       }
 
       const suggestionObj = suggestion as Record<string, unknown>;
 
       if (typeof suggestionObj.message !== 'string') {
+        skippedSuggestions.push(suggestion);
         continue; // Skip suggestions without message
       }
 
@@ -232,6 +318,15 @@ export function parseAnalysisResponse(
     }
   }
 
+  // Warn about skipped suggestions
+  if (skippedSuggestions.length > 0) {
+    console.warn(
+      `Skipped ${skippedSuggestions.length} invalid suggestion(s) from LLM response. ` +
+        `This might indicate the LLM isn't following the output format correctly. ` +
+        `First invalid suggestion: ${JSON.stringify(skippedSuggestions[0])}`
+    );
+  }
+
   return {
     path,
     issues,
@@ -247,27 +342,39 @@ export function parseAnalysisResponse(
  * Each path is analyzed in isolation for maximum accuracy.
  *
  * This function:
- * 1. Builds an analysis prompt from the path
- * 2. Calls the LLM via Vercel AI SDK (one API call)
- * 3. Parses the response into structured results
+ * 1. Creates an AI model from provider configuration (abstracted away from you!)
+ * 2. Builds an analysis prompt from the path
+ * 3. Calls the LLM via Vercel AI SDK (one API call)
+ * 4. Parses the response into structured results
+ *
+ * **You don't need to install or import any AI SDK packages!** Just provide your
+ * API key and the library handles the rest.
  *
  * @param path - The story path to analyze
- * @param options - Analysis configuration including the LLM model
+ * @param options - Analysis configuration (provider, API key, rules, etc.)
  * @returns Analysis results with issues and suggestions
- * @throws {Error} If LLM call fails or response is invalid
+ * @throws {Error} If API key is missing, LLM call fails, or response is invalid
  *
  * @example
  * ```typescript
- * import { openai } from '@ai-sdk/openai';
- * import { traverseTree } from 'react-story-tree';
+ * import { traverseTree, analyzeStoryPath } from 'react-story-tree';
  *
  * // User selects a specific path from the tree
  * const paths = traverseTree(nodes, structure, rootId);
  * const selectedPath = paths[userSelectedIndex];
  *
- * // Analyze just that path
+ * // Analyze with Anthropic (Claude)
  * const result = await analyzeStoryPath(selectedPath, {
- *   model: openai('gpt-5-mini'),
+ *   provider: 'anthropic',
+ *   apiKey: process.env.ANTHROPIC_API_KEY,
+ *   rules: { continuity: true, logic: true }
+ * });
+ *
+ * // Or analyze with OpenAI (GPT)
+ * const result = await analyzeStoryPath(selectedPath, {
+ *   provider: 'openai',
+ *   apiKey: process.env.OPENAI_API_KEY,
+ *   modelName: 'gpt-5-mini', // optional, this is the default
  *   rules: { continuity: true, logic: true }
  * });
  *
@@ -279,15 +386,30 @@ export async function analyzeStoryPath(
   path: StoryPath,
   options: AnalysisOptions
 ): Promise<PathAnalysisResult> {
+  // Create the AI model internally - consumers don't need to know about this!
+  const model = createModel(options.provider, options.apiKey, options.modelName);
+
   const prompt = buildAnalysisPrompt(path, options);
 
-  const response = await generateText({
-    model: options.model,
-    prompt,
-    maxTokens: options.maxTokens,
-  });
+  try {
+    const response = await generateText({
+      model,
+      prompt,
+      ...(options.maxTokens && { maxTokens: options.maxTokens }),
+    });
 
-  return parseAnalysisResponse(response.text, path);
+    return parseAnalysisResponse(response.text, path);
+  } catch (error) {
+    // Enrich error with context about which path failed
+    const pathDescription = `[${path.nodeIds.join(' → ')}]`;
+    const errorMessage = error instanceof Error ? error.message : String(error);
+
+    throw new Error(
+      `Failed to analyze story path ${pathDescription}: ${errorMessage}. ` +
+        `Provider: ${options.provider}, Model: ${options.modelName || 'default'}. ` +
+        `This could be due to: network issues, invalid API key, rate limits, or provider errors.`
+    );
+  }
 }
 
 /**
@@ -342,6 +464,10 @@ function findRootNode(
  * - nodeId
  * - message
  *
+ * We use all four fields for uniqueness because the same logical issue
+ * in the same node might have different contexts. This ensures we don't
+ * lose granular issue tracking while still removing true duplicates.
+ *
  * @param issues - Array of issues to deduplicate
  * @returns Array with duplicate issues removed
  */
@@ -365,6 +491,11 @@ function deduplicateIssues(issues: AnalysisIssue[]): AnalysisIssue[] {
  * Deduplicates suggestions based on their content.
  *
  * Two suggestions are considered duplicates if they have the same message.
+ *
+ * We use only the message for uniqueness (not nodeId or category) because
+ * suggestions are typically general advice that applies broadly across the
+ * story. NodeId and category are supplementary context, not part of the
+ * suggestion's identity.
  *
  * @param suggestions - Array of suggestions to deduplicate
  * @returns Array with duplicate suggestions removed
@@ -393,24 +524,37 @@ function deduplicateSuggestions(suggestions: Suggestion[]): Suggestion[] {
  * **For interactive use, prefer `analyzeStoryPath()` on user-selected paths.**
  *
  * This function:
- * 1. Traverses the tree to find all paths (root to every leaf)
- * 2. Analyzes each path with the LLM (separate calls for isolation/accuracy)
- * 3. Aggregates results and calculates statistics
- * 4. Deduplicates issues and suggestions across paths
+ * 1. Creates an AI model from provider configuration (abstracted away from you!)
+ * 2. Traverses the tree to find all paths (root to every leaf)
+ * 3. Analyzes each path with the LLM (separate calls for isolation/accuracy)
+ * 4. Aggregates results and calculates statistics
+ * 5. Deduplicates issues and suggestions across paths
+ *
+ * **You don't need to install or import any AI SDK packages!** Just provide your
+ * API key and the library handles the rest.
  *
  * @param nodes - Map of all story nodes
  * @param structure - Tree structure defining relationships
- * @param options - Analysis configuration
+ * @param options - Analysis configuration (provider, API key, rules, etc.)
  * @returns Complete analysis with aggregated results and statistics
- * @throws {Error} If root node not found or traversal fails
+ * @throws {Error} If API key is missing, root node not found, or traversal fails
  *
  * @example
  * ```typescript
- * import { openai } from '@ai-sdk/openai';
+ * import { analyzeStory } from 'react-story-tree';
  *
- * // For a comprehensive report (expensive!)
+ * // Comprehensive report with Anthropic (expensive!)
  * const result = await analyzeStory(nodes, structure, {
- *   model: openai('gpt-5-mini'),
+ *   provider: 'anthropic',
+ *   apiKey: process.env.ANTHROPIC_API_KEY,
+ *   rules: { continuity: true, logic: true },
+ * });
+ *
+ * // Or with OpenAI
+ * const result = await analyzeStory(nodes, structure, {
+ *   provider: 'openai',
+ *   apiKey: process.env.OPENAI_API_KEY,
+ *   modelName: 'gpt-5-mini', // optional, this is the default
  *   rules: { continuity: true, logic: true },
  * });
  *
@@ -430,12 +574,44 @@ export async function analyzeStory(
   // Traverse tree to get all paths
   const paths = traverseTree(nodes, structure, rootId);
 
-  // Analyze each path
+  // Analyze each path (the analyzeStoryPath function handles model creation internally)
   const pathResults: PathAnalysisResult[] = [];
+  const errors: Array<{ pathIndex: number; path: StoryPath; error: Error }> = [];
 
-  for (const path of paths) {
-    const result = await analyzeStoryPath(path, options);
-    pathResults.push(result);
+  for (let i = 0; i < paths.length; i++) {
+    const path = paths[i]!;
+
+    try {
+      const result = await analyzeStoryPath(path, options);
+      pathResults.push(result);
+    } catch (error) {
+      // Log error but continue with remaining paths
+      const err = error instanceof Error ? error : new Error(String(error));
+      errors.push({ pathIndex: i, path, error: err });
+
+      console.error(
+        `Failed to analyze path ${i + 1}/${paths.length} ` +
+          `[${path.nodeIds.join(' → ')}]: ${err.message}`
+      );
+    }
+  }
+
+  // If ALL paths failed, this is critical - throw error
+  if (pathResults.length === 0) {
+    throw new Error(
+      `Failed to analyze any paths. All ${paths.length} path(s) failed. ` +
+        `First error: ${errors[0]?.error.message || 'Unknown error'}. ` +
+        `This likely indicates an invalid API key, network issue, or unsupported model.`
+    );
+  }
+
+  // If SOME paths failed, warn but continue with partial results
+  if (errors.length > 0) {
+    console.warn(
+      `Warning: ${errors.length}/${paths.length} path(s) failed to analyze. ` +
+        `Continuing with ${pathResults.length} successful results. ` +
+        `Failed path indices: ${errors.map((e) => e.pathIndex + 1).join(', ')}`
+    );
   }
 
   // Aggregate issues and suggestions

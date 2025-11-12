@@ -135,15 +135,56 @@ export interface StoryAnalysisResult {
 }
 
 /**
+ * Supported LLM providers for story analysis.
+ * - 'anthropic': Claude models from Anthropic
+ * - 'openai': GPT models from OpenAI
+ */
+export type LLMProvider = 'anthropic' | 'openai';
+
+/**
  * Configuration options for story analysis.
+ *
+ * This API is designed to be simple and user-friendly - consumers just provide
+ * their API key and model name, without needing to know about the underlying
+ * AI SDK implementation.
+ *
+ * @example
+ * ```typescript
+ * const result = await analyzeStoryPath(path, {
+ *   provider: 'anthropic',
+ *   apiKey: process.env.ANTHROPIC_API_KEY,
+ *   modelName: 'claude-3-5-sonnet-20241022', // optional, this is the default
+ * });
+ * ```
  */
 export interface AnalysisOptions {
 	/**
-	 * LLM model to use for analysis.
-	 * Should be a model instance from Vercel AI SDK.
-	 * @example openai('gpt-5-mini') or anthropic('claude-3-5-sonnet-20241022')
+	 * LLM provider to use for analysis.
+	 * Supported providers: 'anthropic' | 'openai'
 	 */
-	model: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+	provider: LLMProvider;
+
+	/**
+	 * API key for the LLM provider.
+	 * - For Anthropic, get your key from: https://console.anthropic.com/
+	 * - For OpenAI, get your key from: https://platform.openai.com/api-keys
+	 */
+	apiKey: string;
+
+	/**
+	 * Model name to use for analysis.
+	 *
+	 * **Anthropic models** (defaults to 'claude-3-5-sonnet-20241022'):
+	 * - 'claude-3-5-sonnet-20241022' (best balance)
+	 * - 'claude-3-5-haiku-20241022' (faster, cheaper)
+	 * - 'claude-3-opus-20240229' (most capable, slower)
+	 *
+	 * **OpenAI models** (defaults to 'gpt-5-mini'):
+	 * - 'gpt-5-mini' (latest, fast and capable)
+	 * - 'gpt-4o' (multimodal)
+	 * - 'gpt-4o-mini' (faster, cheaper)
+	 */
+	modelName?: string;
 
 	/**
 	 * Starting node ID for analysis.
@@ -167,12 +208,6 @@ export interface AnalysisOptions {
 	 * Useful for domain-specific requirements.
 	 */
 	customInstructions?: string;
-
-	/**
-	 * Whether to include detailed context in issues.
-	 * Default: true
-	 */
-	includeContext?: boolean;
 
 	/**
 	 * Maximum number of tokens for the LLM response.
