@@ -1,6 +1,6 @@
 {
 	"name": "react-story-tree",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "A React library for building and analyzing branching narrative quest systems with LLM-powered story critique",
 	"main": "./dist/index.js",
 	"module": "./dist/index.mjs",
