@@ -35,7 +35,7 @@ yarn add react-story-tree
 This library requires the following peer dependencies:
 
 ```bash
-pnpm add react react-dom @mui/material @emotion/react @emotion/styled
+pnpm add react react-dom @emotion/react @emotion/styled
 ```
 
 ## Quick Start
