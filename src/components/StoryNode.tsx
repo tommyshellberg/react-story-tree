@@ -17,7 +17,7 @@ import { Handle, Position } from '@xyflow/react';
 import type { FlowNodeData, LayoutDirection } from '../types';
 
 // Define our own props interface to avoid NodeProps type constraint issues
-interface StoryNodeProps {
+export interface StoryNodeProps {
   data: FlowNodeData;
   selected: boolean;
 }

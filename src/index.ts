@@ -7,7 +7,17 @@
 export * from './types';
 
 // Export React components
-export { StoryNode, StoryTree } from './components';
+import { StoryNode as StoryNodeComponent } from './components';
+import type { StoryNode as StoryNodeData } from './types';
+
+/**
+ * `StoryNode` is both the node component (a value) and the node data type.
+ * Declaring them separately keeps both usable from the package root:
+ * `import { StoryNode }` for the component, `import type { StoryNode }` for the data.
+ */
+export const StoryNode = StoryNodeComponent;
+export type StoryNode = StoryNodeData;
+export { StoryTree } from './components';
 export type { StoryTreeProps } from './components';
 
 // Utility functions
