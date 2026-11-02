@@ -84,4 +84,26 @@ describe('StoryTree: props handed to React Flow', () => {
       expect(recorded.nodes.map((node) => node.data.direction)).toEqual(['TB', 'TB', 'TB']);
     });
   });
+
+  describe('getNodeStyle', () => {
+    const nodeData = (id: string) => recorded.nodes.find((node) => node.id === id)?.data;
+
+    it('passes each node the style that getNodeStyle returns for it', () => {
+      const getNodeStyle = (node: StoryNode): React.CSSProperties | undefined =>
+        node.metadata?.track === 'imagined' ? { borderStyle: 'dashed' } : undefined;
+
+      render(
+        <StoryTree nodes={nodes} structure={structure} rootId="start" getNodeStyle={getNodeStyle} />
+      );
+
+      expect(nodeData('left')?.customStyle).toEqual({ borderStyle: 'dashed' });
+      expect(nodeData('start')?.customStyle).toBeUndefined();
+    });
+
+    it('passes no custom style when getNodeStyle is not given', () => {
+      render(<StoryTree nodes={nodes} structure={structure} rootId="start" />);
+
+      expect(recorded.nodes.map((node) => node.data.customStyle)).toEqual([undefined, undefined, undefined]);
+    });
+  });
 });

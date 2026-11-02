@@ -63,6 +63,13 @@ export interface FlowNodeData extends Record<string, unknown> {
    * connection handles sit on. Default: 'TB'
    */
   direction?: LayoutDirection;
+
+  /**
+   * Extra styles for this node, from StoryTree's `getNodeStyle` prop.
+   * Applied after the leaf and branch styles, and before the selected,
+   * error and loading styles.
+   */
+  customStyle?: React.CSSProperties;
 }
 
 /**

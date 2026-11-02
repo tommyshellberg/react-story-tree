@@ -152,6 +152,7 @@ const StoryNodeComponent = (props: StoryNodeProps) => {
       theme,
       showNodeId = false,
       direction = 'TB',
+      customStyle,
     } = data;
 
     const handlePositions = HANDLE_POSITIONS[direction];
@@ -188,6 +189,12 @@ const StoryNodeComponent = (props: StoryNodeProps) => {
         borderColor: theme?.branchBorderColor || '#b1b1b7',
         background: theme?.branchBackgroundColor || '#ffffff',
       };
+    }
+
+    // Consumer styles go after leaf/branch styles but before state styles,
+    // so selected, error and loading states stay visible
+    if (customStyle) {
+      nodeStyle = { ...nodeStyle, ...customStyle };
     }
 
     // Apply selected styling

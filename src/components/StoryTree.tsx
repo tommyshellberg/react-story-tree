@@ -50,6 +50,24 @@ export interface StoryTreeProps {
   /** Whether to show node IDs (customId). Default: false */
   showNodeId?: boolean;
 
+  /**
+   * Returns extra styles for one node, for example to style nodes by their
+   * `metadata`. Applied after the leaf and branch styles, and before the
+   * selected, error and loading styles. Return `undefined` for no change.
+   *
+   * Define it outside your component or wrap it in `useCallback`: a new
+   * function on every render makes StoryTree rebuild every node.
+   *
+   * @example
+   * ```tsx
+   * const getNodeStyle = (node: StoryNode) =>
+   *   node.metadata?.track === 'imagined' ? { borderStyle: 'dashed' } : undefined;
+   *
+   * <StoryTree nodes={nodes} structure={structure} rootId="start" getNodeStyle={getNodeStyle} />
+   * ```
+   */
+  getNodeStyle?: (node: StoryNodeType) => React.CSSProperties | undefined;
+
   /** Called when a node is clicked */
   onNodeClick?: (nodeId: string) => void;
 
@@ -86,6 +104,7 @@ const StoryTreeInner: React.FC<StoryTreeProps> = ({
   layoutOptions,
   theme,
   showNodeId = false,
+  getNodeStyle,
   onNodeClick,
   onEdgeClick,
   showBackground = true,
@@ -131,9 +150,10 @@ const StoryTreeInner: React.FC<StoryTreeProps> = ({
         theme,
         showNodeId,
         direction,
+        customStyle: getNodeStyle?.(node.data.storyNode),
       },
     }));
-  }, [flowNodes, onNodeClick, theme, showNodeId, direction]);
+  }, [flowNodes, onNodeClick, theme, showNodeId, direction, getNodeStyle]);
 
   const initialEdges: Edge[] = useMemo(() => {
     return flowEdges.map((edge) => ({

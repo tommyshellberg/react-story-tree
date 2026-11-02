@@ -589,4 +589,37 @@ describe('StoryNode Component', () => {
       expect(screen.getByTestId('handle-source')).toHaveAttribute('data-handlepos', 'bottom');
     });
   });
+
+  describe('Custom Style', () => {
+    it('applies customStyle on top of the branch style', () => {
+      const props = createMockNodeProps({
+        data: {
+          storyNode: { id: 'node-1', title: 'Imagined', content: 'Content' },
+          isLeaf: false,
+          customStyle: { borderStyle: 'dashed', borderColor: '#9e9e9e' },
+        },
+      });
+
+      const { container } = render(<StoryNode {...props} />);
+
+      const nodeElement = container.querySelector('[data-testid="story-node"]');
+      expect(nodeElement).toHaveStyle({ borderStyle: 'dashed', borderColor: '#9e9e9e' });
+    });
+
+    it('keeps the selected border color when customStyle sets one', () => {
+      const props = createMockNodeProps({
+        data: {
+          storyNode: { id: 'node-1', title: 'Imagined', content: 'Content' },
+          isLeaf: false,
+          customStyle: { borderColor: '#9e9e9e' },
+        },
+        selected: true,
+      });
+
+      const { container } = render(<StoryNode {...props} />);
+
+      const nodeElement = container.querySelector('[data-testid="story-node"]');
+      expect(nodeElement).toHaveStyle({ borderColor: '#2196f3' });
+    });
+  });
 });
