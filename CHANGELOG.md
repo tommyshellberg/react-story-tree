@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `getNodeStyle` prop on `StoryTree`: return extra styles for each node, for example from its `metadata`
 - Node connection points now follow `layoutOptions.direction`, for example left and right for `LR`
 
+### Changed
+
+- Trees laid out `BT`, `LR` or `RL` now attach lines to the matching sides of each node. Before, lines always attached at the top and bottom.
+
 ### Fixed
 
 - Edge labels now show each node's `decisionText`. `StoryTree` read the wrong field, so labels never appeared.

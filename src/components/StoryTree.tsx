@@ -233,12 +233,14 @@ const StoryTreeInner: React.FC<StoryTreeProps> = ({
  * ```tsx
  * const nodes = new Map([
  *   ['start', { id: 'start', title: 'Beginning', content: 'Story starts here' }],
- *   ['end', { id: 'end', title: 'Ending', content: 'The end' }],
+ *   ['end', { id: 'end', title: 'Ending', content: 'The end', decisionText: 'Continue' }],
  * ]);
  *
+ * // Each node id maps to the ids of its children.
+ * // The line label comes from the child's `decisionText`.
  * const structure = {
- *   'start': [{ childId: 'end', decisionText: 'Continue' }],
- *   'end': [],
+ *   start: ['end'],
+ *   end: [],
  * };
  *
  * <StoryTree nodes={nodes} structure={structure} rootId="start" />
