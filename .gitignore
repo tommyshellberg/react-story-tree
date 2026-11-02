@@ -49,3 +49,7 @@ Thumbs.db
 # Evaluation results (don't commit)
 evaluation/results/
 .env.evaluation
+
+# Superpowers specs, plans and scratch files (never commit)
+docs/superpowers/
+.superpowers/

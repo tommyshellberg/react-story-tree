@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { StoryNode } from '../../src/components/StoryNode';
 import type { NodeProps } from '@xyflow/react';
-import type { FlowNodeData } from '../../src/types';
+import type { FlowNodeData, LayoutDirection } from '../../src/types';
 
 /**
  * Test suite for StoryNode component
@@ -557,6 +557,76 @@ describe('StoryNode Component', () => {
       const contentElement = container.querySelector('.nowheel');
       expect(contentElement).toHaveStyle({ overflowY: 'auto' });
       expect(contentElement).toHaveStyle({ maxHeight: '100px' });
+    });
+  });
+
+  describe('Handle Positions', () => {
+    const propsWithDirection = (direction?: LayoutDirection) =>
+      createMockNodeProps({
+        data: {
+          storyNode: { id: 'node-1', title: 'Branch', content: 'Content' },
+          isLeaf: false,
+          direction,
+        },
+      });
+
+    it.each([
+      ['TB', 'top', 'bottom'],
+      ['BT', 'bottom', 'top'],
+      ['LR', 'left', 'right'],
+      ['RL', 'right', 'left'],
+    ] as const)('places the handles for direction %s', (direction, target, source) => {
+      render(<StoryNode {...propsWithDirection(direction)} />);
+
+      expect(screen.getByTestId('handle-target')).toHaveAttribute('data-handlepos', target);
+      expect(screen.getByTestId('handle-source')).toHaveAttribute('data-handlepos', source);
+    });
+
+    it('uses top and bottom when no direction is given', () => {
+      render(<StoryNode {...propsWithDirection(undefined)} />);
+
+      expect(screen.getByTestId('handle-target')).toHaveAttribute('data-handlepos', 'top');
+      expect(screen.getByTestId('handle-source')).toHaveAttribute('data-handlepos', 'bottom');
+    });
+
+    it('falls back to top and bottom for an unknown direction', () => {
+      render(<StoryNode {...propsWithDirection('lr' as LayoutDirection)} />);
+
+      expect(screen.getByTestId('handle-target')).toHaveAttribute('data-handlepos', 'top');
+      expect(screen.getByTestId('handle-source')).toHaveAttribute('data-handlepos', 'bottom');
+    });
+  });
+
+  describe('Custom Style', () => {
+    it('applies customStyle on top of the branch style', () => {
+      const props = createMockNodeProps({
+        data: {
+          storyNode: { id: 'node-1', title: 'Imagined', content: 'Content' },
+          isLeaf: false,
+          customStyle: { borderStyle: 'dashed', borderColor: '#9e9e9e' },
+        },
+      });
+
+      const { container } = render(<StoryNode {...props} />);
+
+      const nodeElement = container.querySelector('[data-testid="story-node"]');
+      expect(nodeElement).toHaveStyle({ borderStyle: 'dashed', borderColor: '#9e9e9e' });
+    });
+
+    it('keeps the selected border color when customStyle sets one', () => {
+      const props = createMockNodeProps({
+        data: {
+          storyNode: { id: 'node-1', title: 'Imagined', content: 'Content' },
+          isLeaf: false,
+          customStyle: { borderColor: '#9e9e9e' },
+        },
+        selected: true,
+      });
+
+      const { container } = render(<StoryNode {...props} />);
+
+      const nodeElement = container.querySelector('[data-testid="story-node"]');
+      expect(nodeElement).toHaveStyle({ borderColor: '#2196f3' });
     });
   });
 });

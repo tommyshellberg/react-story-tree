@@ -317,6 +317,7 @@ Main component for rendering interactive story trees.
 | `layoutOptions` | `LayoutOptions` | `{}` | Layout configuration (direction, spacing) |
 | `theme` | `VisualizationTheme` | `{}` | Theme/styling options |
 | `showNodeId` | `boolean` | `false` | Whether to show node IDs (customId) |
+| `getNodeStyle` | `(node: StoryNode) => React.CSSProperties \| undefined` | `undefined` | Extra styles for one node. Applied after leaf and branch styles, before selected, error and loading styles. |
 | `onNodeClick` | `(nodeId: string) => void` | `undefined` | Called when a node is clicked |
 | `onEdgeClick` | `(edgeId: string) => void` | `undefined` | Called when an edge is clicked |
 | `showBackground` | `boolean` | `true` | Show background grid |
@@ -342,6 +343,17 @@ Main component for rendering interactive story trees.
 />
 ```
 
+### Styling Individual Nodes
+
+Use `getNodeStyle` to style nodes from their own data, such as `metadata`. Define the function outside your component, so StoryTree doesn't rebuild every node on each render.
+
+```tsx
+const getNodeStyle = (node: StoryNode) =>
+  node.metadata?.track === 'imagined' ? { borderStyle: 'dashed' } : undefined;
+
+<StoryTree nodes={nodes} structure={structure} rootId="start" getNodeStyle={getNodeStyle} />
+```
+
 ### Layout Options
 
 ```tsx
@@ -356,6 +368,8 @@ Main component for rendering interactive story trees.
   }}
 />
 ```
+
+Each node's connection points follow the direction: top and bottom for `TB` and `BT`, left and right for `LR` and `RL`.
 
 ## Utility Functions
 

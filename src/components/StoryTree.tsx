@@ -50,6 +50,24 @@ export interface StoryTreeProps {
   /** Whether to show node IDs (customId). Default: false */
   showNodeId?: boolean;
 
+  /**
+   * Returns extra styles for one node, for example to style nodes by their
+   * `metadata`. Applied after the leaf and branch styles, and before the
+   * selected, error and loading styles. Return `undefined` for no change.
+   *
+   * Define it outside your component or wrap it in `useCallback`: a new
+   * function on every render makes StoryTree rebuild every node.
+   *
+   * @example
+   * ```tsx
+   * const getNodeStyle = (node: StoryNode) =>
+   *   node.metadata?.track === 'imagined' ? { borderStyle: 'dashed' } : undefined;
+   *
+   * <StoryTree nodes={nodes} structure={structure} rootId="start" getNodeStyle={getNodeStyle} />
+   * ```
+   */
+  getNodeStyle?: (node: StoryNodeType) => React.CSSProperties | undefined;
+
   /** Called when a node is clicked */
   onNodeClick?: (nodeId: string) => void;
 
@@ -86,6 +104,7 @@ const StoryTreeInner: React.FC<StoryTreeProps> = ({
   layoutOptions,
   theme,
   showNodeId = false,
+  getNodeStyle,
   onNodeClick,
   onEdgeClick,
   showBackground = true,
@@ -114,6 +133,8 @@ const StoryTreeInner: React.FC<StoryTreeProps> = ({
     }
   }, [flowStructure, layoutOptions]);
 
+  const direction = layoutOptions?.direction ?? 'TB';
+
   // Edges don't need layout, use directly from flow structure
   const flowEdges = flowStructure.edges;
 
@@ -128,16 +149,18 @@ const StoryTreeInner: React.FC<StoryTreeProps> = ({
         onClick: onNodeClick,
         theme,
         showNodeId,
+        direction,
+        customStyle: getNodeStyle?.(node.data.storyNode),
       },
     }));
-  }, [flowNodes, onNodeClick, theme, showNodeId]);
+  }, [flowNodes, onNodeClick, theme, showNodeId, direction, getNodeStyle]);
 
   const initialEdges: Edge[] = useMemo(() => {
     return flowEdges.map((edge) => ({
       id: edge.id,
       source: edge.source,
       target: edge.target,
-      label: edge.data?.decisionText as string | undefined,
+      label: edge.data?.label,
       type: edge.type,
       style: edge.style,
       labelStyle: edge.labelStyle,
@@ -210,12 +233,14 @@ const StoryTreeInner: React.FC<StoryTreeProps> = ({
  * ```tsx
  * const nodes = new Map([
  *   ['start', { id: 'start', title: 'Beginning', content: 'Story starts here' }],
- *   ['end', { id: 'end', title: 'Ending', content: 'The end' }],
+ *   ['end', { id: 'end', title: 'Ending', content: 'The end', decisionText: 'Continue' }],
  * ]);
  *
+ * // Each node id maps to the ids of its children.
+ * // The line label comes from the child's `decisionText`.
  * const structure = {
- *   'start': [{ childId: 'end', decisionText: 'Continue' }],
- *   'end': [],
+ *   start: ['end'],
+ *   end: [],
  * };
  *
  * <StoryTree nodes={nodes} structure={structure} rootId="start" />

@@ -57,6 +57,19 @@ export interface FlowNodeData extends Record<string, unknown> {
 
   /** Whether to show the node ID (customId) */
   showNodeId?: boolean;
+
+  /**
+   * Layout direction of the tree. Decides which sides of the node the
+   * connection handles sit on. Default: 'TB'
+   */
+  direction?: LayoutDirection;
+
+  /**
+   * Extra styles for this node, from StoryTree's `getNodeStyle` prop.
+   * Applied after the leaf and branch styles, and before the selected,
+   * error and loading styles.
+   */
+  customStyle?: React.CSSProperties;
 }
 
 /**
