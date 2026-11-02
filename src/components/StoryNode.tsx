@@ -155,7 +155,7 @@ const StoryNodeComponent = (props: StoryNodeProps) => {
       customStyle,
     } = data;
 
-    const handlePositions = HANDLE_POSITIONS[direction];
+    const handlePositions = HANDLE_POSITIONS[direction] ?? HANDLE_POSITIONS.TB;
 
     // LIBRARY PATTERN: Validate required nested data
     if (!storyNode) {

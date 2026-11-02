@@ -588,6 +588,13 @@ describe('StoryNode Component', () => {
       expect(screen.getByTestId('handle-target')).toHaveAttribute('data-handlepos', 'top');
       expect(screen.getByTestId('handle-source')).toHaveAttribute('data-handlepos', 'bottom');
     });
+
+    it('falls back to top and bottom for an unknown direction', () => {
+      render(<StoryNode {...propsWithDirection('lr' as LayoutDirection)} />);
+
+      expect(screen.getByTestId('handle-target')).toHaveAttribute('data-handlepos', 'top');
+      expect(screen.getByTestId('handle-source')).toHaveAttribute('data-handlepos', 'bottom');
+    });
   });
 
   describe('Custom Style', () => {
