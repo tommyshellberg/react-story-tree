@@ -137,7 +137,7 @@ const StoryTreeInner: React.FC<StoryTreeProps> = ({
       id: edge.id,
       source: edge.source,
       target: edge.target,
-      label: edge.data?.decisionText as string | undefined,
+      label: edge.data?.label,
       type: edge.type,
       style: edge.style,
       labelStyle: edge.labelStyle,
