@@ -68,4 +68,20 @@ describe('StoryTree: props handed to React Flow', () => {
       expect(edgeLabel('edge-start-right')).toBeUndefined();
     });
   });
+
+  describe('layout direction', () => {
+    it('tells every node the layout direction', () => {
+      render(
+        <StoryTree nodes={nodes} structure={structure} rootId="start" layoutOptions={{ direction: 'LR' }} />
+      );
+
+      expect(recorded.nodes.map((node) => node.data.direction)).toEqual(['LR', 'LR', 'LR']);
+    });
+
+    it('uses top to bottom when no direction is given', () => {
+      render(<StoryTree nodes={nodes} structure={structure} rootId="start" />);
+
+      expect(recorded.nodes.map((node) => node.data.direction)).toEqual(['TB', 'TB', 'TB']);
+    });
+  });
 });

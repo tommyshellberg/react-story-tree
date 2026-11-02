@@ -14,7 +14,7 @@
 
 import React from 'react';
 import { Handle, Position } from '@xyflow/react';
-import type { FlowNodeData } from '../types';
+import type { FlowNodeData, LayoutDirection } from '../types';
 
 // Define our own props interface to avoid NodeProps type constraint issues
 interface StoryNodeProps {
@@ -104,6 +104,17 @@ const styles = {
 };
 
 /**
+ * Which side of the node each connection handle sits on, per layout direction.
+ * The target handle receives the incoming edge; the source handle sends edges out.
+ */
+const HANDLE_POSITIONS: Record<LayoutDirection, { target: Position; source: Position }> = {
+  TB: { target: Position.Top, source: Position.Bottom },
+  BT: { target: Position.Bottom, source: Position.Top },
+  LR: { target: Position.Left, source: Position.Right },
+  RL: { target: Position.Right, source: Position.Left },
+};
+
+/**
  * StoryNode component - renders a single node in the story tree.
  *
  * This component is wrapped with React.memo() for performance optimization
@@ -140,7 +151,10 @@ const StoryNodeComponent = (props: StoryNodeProps) => {
       onClick,
       theme,
       showNodeId = false,
+      direction = 'TB',
     } = data;
+
+    const handlePositions = HANDLE_POSITIONS[direction];
 
     // LIBRARY PATTERN: Validate required nested data
     if (!storyNode) {
@@ -230,7 +244,7 @@ const StoryNodeComponent = (props: StoryNodeProps) => {
         {/* Target handle (receives incoming edges) - only show if not root */}
         <Handle
           type="target"
-          position={Position.Top}
+          position={handlePositions.target}
           style={{
             background: isLeaf ? '#4caf50' : '#2196f3',
             width: '10px',
@@ -276,7 +290,7 @@ const StoryNodeComponent = (props: StoryNodeProps) => {
         {!isLeaf && (
           <Handle
             type="source"
-            position={Position.Bottom}
+            position={handlePositions.source}
             style={{
               background: '#2196f3',
               width: '10px',

@@ -114,6 +114,8 @@ const StoryTreeInner: React.FC<StoryTreeProps> = ({
     }
   }, [flowStructure, layoutOptions]);
 
+  const direction = layoutOptions?.direction ?? 'TB';
+
   // Edges don't need layout, use directly from flow structure
   const flowEdges = flowStructure.edges;
 
@@ -128,9 +130,10 @@ const StoryTreeInner: React.FC<StoryTreeProps> = ({
         onClick: onNodeClick,
         theme,
         showNodeId,
+        direction,
       },
     }));
-  }, [flowNodes, onNodeClick, theme, showNodeId]);
+  }, [flowNodes, onNodeClick, theme, showNodeId, direction]);
 
   const initialEdges: Edge[] = useMemo(() => {
     return flowEdges.map((edge) => ({
